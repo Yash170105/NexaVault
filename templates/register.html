@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient Registration — NexaVault{% endblock %}
+
+{% block content %}
+<div style="max-width: 580px; margin: 2rem auto;">
+    <div class="card animate-fade-in-up">
+        <div class="card-header" style="text-align: center; display: block; border-bottom: none; margin-bottom: 0.5rem;">
+            <h1 class="card-title" style="font-size: 1.5rem;">Patient Account Registration</h1>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.35rem;">
+                Create your patient-governed encrypted vault access
+            </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('register') }}">
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" name="full_name" class="form-control" required placeholder="e.g. Yash Patel">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" name="email" class="form-control" required placeholder="name@example.com">
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" name="dob" class="form-control" required value="1995-05-15">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Blood Group</label>
+                    <select name="blood_group" class="form-control" required>
+                        <option value="B+">B+ (Positive)</option>
+                        <option value="A+">A+ (Positive)</option>
+                        <option value="O+">O+ (Positive)</option>
+                        <option value="AB+">AB+ (Positive)</option>
+                        <option value="B-">B- (Negative)</option>
+                        <option value="A-">A- (Negative)</option>
+                        <option value="O-">O- (Negative)</option>
+                        <option value="AB-">AB- (Negative)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Gender</label>
+                    <select name="gender" class="form-control" required>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" name="phone" class="form-control" required placeholder="+91 98250 99999">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Select Primary Consulting Doctor</label>
+                <select name="primary_doctor_id" class="form-control" required>
+                    {% for doc in doctors %}
+                        <option value="{{ doc.doctor_id }}">{{ doc.full_name }} — {{ doc.specialization }} ({{ doc.department }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Create Password</label>
+                <input type="password" name="password" class="form-control" required placeholder="Minimum 8 characters">
+            </div>
+
+            <button type="submit" class="btn btn-accent" style="width: 100%; padding: 0.75rem; margin-top: 0.5rem;">
+                Create Encrypted Vault & Register &rarr;
+            </button>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
+            Already have an account? <a href="{{ url_for('login') }}" style="font-weight: 600;">Sign In</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

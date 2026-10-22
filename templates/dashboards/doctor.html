@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}Doctor Clinical Console — {{ doctor.full_name }} — NexaVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <div class="doctor-avatar-circle" style="width: 64px; height: 64px; font-size: 1.5rem;">
+            {{ doctor.avatar_initials }}
+        </div>
+        <div>
+            <h1 class="page-title">{{ doctor.full_name }}</h1>
+            <p class="page-subtitle">
+                {{ doctor.specialization }} · {{ doctor.department }} · {{ doctor.qualification }} ({{ doctor.experience_years }} Years Experience)
+            </p>
+        </div>
+    </div>
+    <div>
+        <a href="#upload-section" class="btn btn-accent">
+            <span>➕</span> Encrypt & Upload Medical Record
+        </a>
+    </div>
+</div>
+
+<!-- Quick Statistics -->
+<div class="grid-3" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">Assigned Primary Patients</div>
+        <div class="stat-value"><span class="counter-value" data-target="{{ assigned_patients|length }}">{{ assigned_patients|length }}</span></div>
+        <div class="stat-meta">Authorized clinical access scope</div>
+        <div class="stat-icon-bg">👥</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Shared With Me Records</div>
+        <div class="stat-value"><span class="counter-value" data-target="{{ shared_grants|length }}">{{ shared_grants|length }}</span></div>
+        <div class="stat-meta">External specialist consultations</div>
+        <div class="stat-icon-bg">🤝</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Encrypted Uploads</div>
+        <div class="stat-value"><span class="counter-value" data-target="{{ my_records_count }}">{{ my_records_count }}</span></div>
+        <div class="stat-meta">AES-256-GCM Vault Verified</div>
+        <div class="stat-icon-bg">🔒</div>
+    </div>
+</div>
+
+<!-- Primary Assigned Patients -->
+<div class="card" style="margin-bottom: 2.5rem;">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">My Assigned Clinical Cohort</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Under NexaVault zero-trust RBAC, you can only decrypt records for assigned patients or patients with active consent grants.
+            </p>
+        </div>
+        <span class="badge badge-success">Assigned Access Granted</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Patient ID</th>
+                    <th>Full Name</th>
+                    <th>Demographics</th>
+                    <th>Blood Group</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Clinical Vault</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in assigned_patients %}
+                <tr>
+                    <td><code>{{ p.patient_id }}</code></td>
+                    <td><strong>{{ p.full_name }}</strong></td>
+                    <td>{{ p.age }} yrs ({{ p.gender }})</td>
+                    <td><span class="badge badge-info">{{ p.blood_group }}</span></td>
+                    <td>{{ p.phone }}</td>
+                    <td><span class="badge badge-neutral">{{ p.status }}</span></td>
+                    <td>
+                        <a href="{{ url_for('patient_files_view', patient_id=p.patient_id) }}" class="btn btn-outline btn-sm">
+                            Access Encrypted Records &rarr;
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" style="text-align: center; color: var(--text-stone);">No primary patients assigned.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Cross-Consultation: Shared With Me Records -->
+<div class="card" style="margin-bottom: 2.5rem;">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Consultation Records Shared With Me</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Patients or referring physicians who granted selective access via cryptographic tokens.
+            </p>
+        </div>
+        <a href="{{ url_for('access_shared_page') }}" class="btn btn-outline btn-sm">Redeem Shared Token</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Referring Doctor</th>
+                    <th>Permitted Records</th>
+                    <th>Expires At</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in shared_grants %}
+                <tr>
+                    <td><strong>{{ g.patient.full_name }}</strong> ({{ g.patient_id }})</td>
+                    <td>{{ g.grantor.full_name }}</td>
+                    <td><code>{{ g.record_ids_json }}</code></td>
+                    <td>{{ g.expires_at.strftime('%Y-%m-%d %H:%M UTC') }}</td>
+                    <td>
+                        {% if g.is_active() %}
+                            <span class="badge badge-success">Active Grant</span>
+                        {% else %}
+                            <span class="badge badge-danger">Expired / Revoked</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('patient_files_view', patient_id=g.patient_id) }}" class="btn btn-primary btn-sm">
+                            View Shared Files
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" style="text-align: center; color: var(--text-stone);">No cross-consultation records currently shared with your profile.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Encrypt & Upload Medical Record Form -->
+<div id="upload-section" class="card" style="background: linear-gradient(135deg, var(--bg-card), var(--bg-sand-light));">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Upload & Encrypt New Medical Record</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Applies AES-256-GCM envelope encryption, generates random DEK, computes trusted SHA-256 digest, and logs to the audit chain.
+            </p>
+        </div>
+        <span class="badge badge-info">Zero-Knowledge Storage</span>
+    </div>
+
+    <form method="POST" action="{{ url_for('upload_medical_record') }}" enctype="multipart/form-data">
+        <div class="grid-2">
+            <div class="form-group">
+                <label class="form-label">Select Assigned Patient</label>
+                <select name="patient_id" class="form-control" required>
+                    {% for p in assigned_patients %}
+                        <option value="{{ p.patient_id }}">{{ p.patient_id }} — {{ p.full_name }} ({{ p.blood_group }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Report Category</label>
+                <select name="category" class="form-control" required>
+                    <option value="Lab Report">Lab Report</option>
+                    <option value="Radiology & Imaging">Radiology & Imaging</option>
+                    <option value="Clinical Summary">Clinical Summary</option>
+                    <option value="Pathology Assessment">Pathology Assessment</option>
+                    <option value="Prescription & Therapy Plan">Prescription & Therapy Plan</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Document Title</label>
+            <input type="text" name="title" class="form-control" required placeholder="e.g. Diagnostic Cardiac Ultrasound & Doppler Summary">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Select File to Encrypt (.pdf, .txt, .png, .jpg)</label>
+            <input type="file" name="file" class="form-control" required>
+            <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                File is encrypted locally before being stored in <code>encrypted_files/med_records/</code>.
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Clinical Observations & Summary Notes</label>
+            <textarea name="description" class="form-control" rows="3" placeholder="Enter clinical observations, diagnostic notes, or follow-up regimen..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-accent" style="padding: 0.75rem 1.5rem;">
+            <span>🔒</span> Apply AES-256-GCM Encryption & Save to Vault
+        </button>
+    </form>
+</div>
+{% endblock %}

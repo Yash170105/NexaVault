@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}SecOps Admin Dashboard — NexaVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">SecOps & Administration Console</h1>
+        <p class="page-subtitle">Zero-Trust Healthcare Cybersecurity Oversight & HIPAA Alignment Hub</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button onclick="verifyAuditChain()" class="btn btn-outline">
+            <span>🛡️</span> Verify Audit Chain
+        </button>
+        <a href="{{ url_for('create_contingency_backup') }}" class="btn btn-primary">
+            <span>💾</span> Contingency Backup
+        </a>
+    </div>
+</div>
+
+<!-- Chain Verification Alert Result Box -->
+<div id="chain-verify-result" style="display: none; margin-bottom: 1.5rem;"></div>
+
+<!-- Top Metrics & Dynamic Risk Score -->
+<div class="grid-4" style="margin-bottom: 2rem;">
+    <!-- System Risk Score Gauge -->
+    <div class="stat-card" style="border-top: 4px solid {{ risk_data.color }};">
+        <div class="stat-label">Dynamic Threat Risk Score</div>
+        <div class="stat-value" style="color: {{ risk_data.color }};">
+            {{ risk_data.score }}<span style="font-size: 1.2rem; color: var(--text-stone);">/100</span>
+        </div>
+        <div class="stat-meta">
+            Status: <strong>{{ risk_data.level }}</strong> ({{ risk_data.active_alert_count }} active alerts)
+        </div>
+        <div class="stat-icon-bg">⚠️</div>
+    </div>
+
+    <!-- Patients Count -->
+    <div class="stat-card">
+        <div class="stat-label">Total Patients</div>
+        <div class="stat-value"><span class="counter-value" data-target="{{ patient_count }}">{{ patient_count }}</span></div>
+        <div class="stat-meta">Harshita Makwana (P001) Primary #1</div>
+        <div class="stat-icon-bg">👥</div>
+    </div>
+
+    <!-- Doctors Count -->
+    <div class="stat-card">
+        <div class="stat-label">Credentialed Doctors</div>
+        <div class="stat-value"><span class="counter-value" data-target="{{ doctor_count }}">{{ doctor_count }}</span></div>
+        <div class="stat-meta">10 Clinical Specialists Assigned</div>
+        <div class="stat-icon-bg">🩺</div>
+    </div>
+
+    <!-- Encrypted Files Count -->
+    <div class="stat-card">
+        <div class="stat-label">Encrypted Medical Records</div>
+        <div class="stat-value"><span class="counter-value" data-target="{{ record_count }}">{{ record_count }}</span></div>
+        <div class="stat-meta">AES-256-GCM Vault Protected</div>
+        <div class="stat-icon-bg">🔒</div>
+    </div>
+</div>
+
+<!-- Viva Demonstration Attack Simulation Control Bar -->
+<div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, #FFF9F5, var(--bg-card)); border: 1px solid var(--color-coral);">
+    <div class="card-header" style="border-bottom: 1px solid rgba(233, 128, 116, 0.3);">
+        <div>
+            <h2 class="card-title" style="color: var(--color-accent-red); display: flex; align-items: center; gap: 0.5rem;">
+                <span>⚡</span> Viva Defense & Forensic Attack Simulator
+            </h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                Trigger real cybersecurity anomalies to demonstrate backend threat detection, cryptographic integrity, and forensic chain verification live to examiners.
+            </p>
+        </div>
+        <a href="{{ url_for('reseed_database_route') }}" class="btn btn-outline btn-sm" onclick="return confirm('Reset all data back to the clean 15-patient baseline?')">
+            Reset Baseline
+        </a>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+        <button onclick="simulateTampering('file', 'MR-1001')" class="btn btn-outline btn-sm" style="border-color: #D32F2F; color: #D32F2F;">
+            Simulate File Bit-Flip (MR-1001)
+        </button>
+        <button onclick="simulateTampering('audit', '1')" class="btn btn-outline btn-sm" style="border-color: #ED6C02; color: #ED6C02;">
+            Simulate Audit Entry Mutation
+        </button>
+        <button onclick="simulateTampering('bruteforce', 'admin@test.com')" class="btn btn-outline btn-sm" style="border-color: #0288D1; color: #0288D1;">
+            Simulate Repeated Failed Logins
+        </button>
+        <a href="{{ url_for('audit_logs_view') }}" class="btn btn-outline btn-sm">
+            Inspect Audit Trail
+        </a>
+        <a href="{{ url_for('incidents_list') }}" class="btn btn-outline btn-sm">
+            Incident Response Board
+        </a>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom: 2rem;">
+    <!-- Recent Security Alerts & Triage -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Recent Security Alerts</h2>
+            <a href="{{ url_for('security_dashboard') }}" class="btn btn-outline btn-sm">View All ({{ alerts|length }})</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Rule</th>
+                        <th>Severity</th>
+                        <th>Details</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in alerts[:5] %}
+                    <tr>
+                        <td><strong>{{ a.rule_name }}</strong></td>
+                        <td>
+                            {% if a.severity == 'Critical' %}
+                                <span class="badge badge-danger">Critical</span>
+                            {% elif a.severity == 'High' %}
+                                <span class="badge badge-danger">High</span>
+                            {% elif a.severity == 'Medium' %}
+                                <span class="badge badge-warning">Medium</span>
+                            {% else %}
+                                <span class="badge badge-success">Low</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.8rem; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ a.details }}
+                        </td>
+                        <td><span class="badge badge-neutral">{{ a.status }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-stone);">No active alerts. System perimeter clean.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Active Security Incidents -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Security Incident Response</h2>
+            <a href="{{ url_for('incidents_list') }}" class="btn btn-outline btn-sm">Incident Triage</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Severity</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inc in incidents[:5] %}
+                    <tr>
+                        <td><code>{{ inc.incident_number }}</code></td>
+                        <td style="font-size: 0.85rem; font-weight: 600;">{{ inc.title }}</td>
+                        <td>
+                            <span class="badge {% if inc.severity in ['High', 'Critical'] %}badge-danger{% else %}badge-warning{% endif %}">
+                                {{ inc.severity }}
+                            </span>
+                        </td>
+                        <td><span class="badge badge-info">{{ inc.status }}</span></td>
+                        <td>
+                            <a href="{{ url_for('incidents_list') }}" class="btn btn-outline btn-sm">Investigate</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-stone);">No open security incidents.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- User Accounts Governance & Least Privilege Controls -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">System Accounts & Least-Privilege Governance</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Admins manage accounts, lock suspicious sessions, and audit access. 
+                <strong style="color: var(--color-accent-red);">Note: Admin role CANNOT decrypt or view medical reports directly.</strong>
+            </p>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Failed Logins</th>
+                    <th>Governance Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td><strong>{{ u.full_name }}</strong></td>
+                    <td><code>{{ u.email }}</code></td>
+                    <td><span class="role-pill role-{{ u.role }}">{{ u.role }}</span></td>
+                    <td>
+                        {% if u.is_locked %}
+                            <span class="badge badge-danger">🔒 LOCKED</span>
+                        {% elif not u.is_active %}
+                            <span class="badge badge-neutral">Inactive</span>
+                        {% else %}
+                            <span class="badge badge-success">Active</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ u.failed_login_count or 0 }}</td>
+                    <td>
+                        {% if u.id != session.get('user_id') %}
+                            {% if u.is_locked %}
+                                <form method="POST" action="{{ url_for('unlock_user', user_id=u.id) }}" style="display: inline;">
+                                    <button class="btn btn-outline btn-sm" style="color: var(--color-success); border-color: var(--color-success);">Unlock</button>
+                                </form>
+                            {% else %}
+                                <form method="POST" action="{{ url_for('lock_user', user_id=u.id) }}" style="display: inline;">
+                                    <button class="btn btn-outline btn-sm" style="color: var(--color-danger); border-color: var(--color-danger);">Isolate / Lock</button>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <span style="font-size: 0.8rem; color: var(--text-stone);">Current Admin</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

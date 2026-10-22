@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Authorized Patient Cohort (15 Patients) — NexaVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Authorized Patient Directory</h1>
+        <p class="page-subtitle">Synthetic Patient Cohort · Harshita Makwana (P001) Primary Sample Record</p>
+    </div>
+    <span class="badge badge-success">15 Synthetic Patient Profiles</span>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Patient Records Directory</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Default order guaranteed with Harshita Makwana (P001) leading the dataset. Access to files is strictly governed by zero-trust RBAC.
+            </p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Patient ID</th>
+                    <th>Full Name</th>
+                    <th>Age / Gender</th>
+                    <th>Blood Group</th>
+                    <th>Phone</th>
+                    <th>Department</th>
+                    <th>Primary Consulting Doctor</th>
+                    <th>Status</th>
+                    <th>Vault Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in patients %}
+                <tr {% if p.patient_id == 'P001' %}style="background-color: #FFF9F5;"{% endif %}>
+                    <td>
+                        <code>{{ p.patient_id }}</code>
+                        {% if p.patient_id == 'P001' %}
+                            <span class="badge badge-accent" style="background-color: var(--color-accent-red); color: white; font-size: 0.65rem; margin-left: 0.25rem;">PRIMARY</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ p.full_name }}</strong></td>
+                    <td>{{ p.age }} yrs ({{ p.gender }})</td>
+                    <td><span class="badge badge-info">{{ p.blood_group }}</span></td>
+                    <td>{{ p.phone }}</td>
+                    <td>{{ p.department }}</td>
+                    <td>
+                        <strong>{{ p.primary_doctor.full_name if p.primary_doctor else 'Unassigned' }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-stone);">{{ p.primary_doctor.specialization if p.primary_doctor else '' }}</div>
+                    </td>
+                    <td>
+                        <span class="badge {% if p.status == 'Active' %}badge-success{% elif p.status == 'Under Review' %}badge-warning{% else %}badge-neutral{% endif %}">
+                            {{ p.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('patient_files_view', patient_id=p.patient_id) }}" class="btn btn-outline btn-sm">
+                            View Vault &rarr;
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

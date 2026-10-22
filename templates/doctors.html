@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Medical Specialists & Doctor Profiles — NexaVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Credentialed Medical Specialists</h1>
+        <p class="page-subtitle">Ten Indian Doctors & Clinical Assignment Matrix</p>
+    </div>
+    <span class="badge badge-info">10 Certified Specialists</span>
+</div>
+
+<div class="grid-2" style="gap: 1.5rem;">
+    {% for doc in doctors %}
+    <div class="card card-hover-lift" style="display: flex; gap: 1.25rem;">
+        <div class="doctor-avatar-circle" style="flex-shrink: 0; width: 68px; height: 68px; font-size: 1.5rem;">
+            {{ doc.avatar_initials }}
+        </div>
+        <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
+                <div>
+                    <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">
+                        <a href="{{ url_for('doctor_profile_detail', doctor_id=doc.doctor_id) }}">{{ doc.full_name }}</a>
+                    </h2>
+                    <div style="color: var(--color-accent-red); font-weight: 600; font-size: 0.9rem;">
+                        {{ doc.specialization }} · {{ doc.department }}
+                    </div>
+                </div>
+                <code>{{ doc.doctor_id }}</code>
+            </div>
+
+            <div style="font-size: 0.85rem; color: var(--text-stone); margin: 0.4rem 0;">
+                🎓 {{ doc.qualification }} · ⏳ {{ doc.experience_years }} Years Experience
+            </div>
+
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.75rem; line-height: 1.5;">
+                {{ doc.bio }}
+            </p>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.75rem; font-size: 0.82rem;">
+                <div>
+                    Assigned Patients: <strong>{{ doc.assignments.count() }}</strong>
+                </div>
+                <a href="{{ url_for('doctor_profile_detail', doctor_id=doc.doctor_id) }}" class="btn btn-outline btn-sm">
+                    View Profile & Assignments &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

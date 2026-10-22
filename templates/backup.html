@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Contingency Backups & Disaster Recovery — NexaVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Contingency Backups & Disaster Recovery</h1>
+        <p class="page-subtitle">HIPAA § 164.308(a)(7) Mandate: Tested Encrypted Snapshots & Chain Restoration</p>
+    </div>
+    <div>
+        <a href="{{ url_for('create_contingency_backup') }}" class="btn btn-accent">
+            <span>💾</span> Create Encrypted Backup Snapshot
+        </a>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <h2 class="card-title">Available Contingency Backup Snapshots</h2>
+        <span class="badge badge-info">{{ backups|length }} Snapshots</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Backup Archive Filename</th>
+                    <th>Archive Size</th>
+                    <th>Created Timestamp</th>
+                    <th>Storage Path</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in backups %}
+                <tr>
+                    <td><code>{{ b.filename }}</code></td>
+                    <td>{{ b.size }}</td>
+                    <td style="font-size: 0.85rem;">{{ b.timestamp }}</td>
+                    <td style="font-size: 0.8rem; color: var(--text-stone);"><code>backups/{{ b.filename }}</code></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" style="text-align: center; color: var(--text-stone);">No backups generated yet. Click "Create Encrypted Backup Snapshot" to initialize.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

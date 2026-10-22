@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NexaVault — Secure Medical Records & Threat Monitoring{% endblock %}</title>
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <a href="{{ url_for('home') }}" class="nav-brand">
+            <div class="nav-logo-icon">NV</div>
+            <div>
+                <span>NexaVault</span>
+                <span class="nav-tagline">Cybersecurity Healthcare</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="{{ url_for('home') }}" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
+            <li><a href="{{ url_for('list_doctors') }}" class="{% if request.path == '/doctors' %}active{% endif %}">Doctors</a></li>
+            
+            {% if session.get('user_id') %}
+                <li><a href="{{ url_for('dashboard_router') }}" class="{% if '/dashboard' in request.path %}active{% endif %}">Dashboard</a></li>
+                <li><a href="{{ url_for('list_patients') }}" class="{% if request.path == '/patients' %}active{% endif %}">Patients</a></li>
+                <li><a href="{{ url_for('sharing_hub') }}" class="{% if request.path == '/sharing' %}active{% endif %}">Sharing</a></li>
+                
+                {% if session.get('role') in ['admin', 'doctor'] %}
+                    <li><a href="{{ url_for('security_dashboard') }}" class="{% if request.path == '/security' %}active{% endif %}">Security</a></li>
+                    <li><a href="{{ url_for('incidents_list') }}" class="{% if request.path == '/incidents' %}active{% endif %}">Incidents</a></li>
+                {% endif %}
+                
+                {% if session.get('role') == 'admin' %}
+                    <li><a href="{{ url_for('audit_logs_view') }}" class="{% if request.path == '/audit-logs' %}active{% endif %}">Audit Trail</a></li>
+                    <li><a href="{{ url_for('risk_assessment_view') }}" class="{% if request.path == '/risk-assessment' %}active{% endif %}">HIPAA Matrix</a></li>
+                {% endif %}
+            {% else %}
+                <li><a href="{{ url_for('risk_assessment_view') }}">HIPAA Controls</a></li>
+            {% endif %}
+        </ul>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            {% if session.get('user_id') %}
+                <div class="nav-user-badge">
+                    <span>{{ session.get('full_name') }}</span>
+                    <span class="role-pill role-{{ session.get('role') }}">{{ session.get('role') }}</span>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm">Sign In</a>
+                <a href="{{ url_for('register') }}" class="btn btn-accent btn-sm">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Viva Demonstration Quick Role Bar -->
+    <div style="background-color: var(--bg-secondary); border-bottom: 1px solid var(--border-sand); padding: 0.5rem 2rem;">
+        <div style="max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--color-accent-red); display: flex; align-items: center; gap: 0.4rem;">
+                <span>⚡</span> <span>VIVA QUICK SWITCHER (DEMO ROLES):</span>
+            </div>
+            <div class="quick-role-btns">
+                <a href="{{ url_for('quick_login_role', role='admin') }}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">Admin</a>
+                <a href="{{ url_for('quick_login_role', role='doctor') }}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">Doctor (Dr. Aarav)</a>
+                <a href="{{ url_for('quick_login_role', role='patient') }}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">Patient (Harshita Makwana)</a>
+                <a href="{{ url_for('quick_login_role', role='finance') }}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">Finance</a>
+                <a href="{{ url_for('quick_login_role', role='staff') }}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">Staff</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="main-content">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} animate-fade-in-up">
+                        <span>{{ message }}</span>
+                        <button onclick="this.parentElement.remove()" style="background: none; border: none; font-size: 1.1rem; cursor: pointer; color: inherit;">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div>
+                <strong>NexaVault Healthcare Cybersecurity Platform</strong>
+                <p style="margin-top: 0.25rem;">HIPAA-Aligned Prototype · AES-256-GCM Cryptographic Vault · Tamper-Evident SHA-256 Hash Chain</p>
+            </div>
+            <div>
+                <span>Demonstration Mode: Local Synthetic Dataset (15 Patients, 10 Doctors)</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Client Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/security.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

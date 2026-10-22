@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Controlled Medical Record Sharing & Patient Consent — NexaVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Controlled Medical Record Sharing</h1>
+        <p class="page-subtitle">Patient Consent-Gated Cross-Consultation & Token-Authorized Access</p>
+    </div>
+    <div>
+        <a href="{{ url_for('access_shared_page') }}" class="btn btn-outline">
+            <span>🔑</span> Redeem Sharing Token
+        </a>
+    </div>
+</div>
+
+<!-- Architecture & Security Note -->
+<div class="card" style="margin-bottom: 2rem; background-color: var(--bg-sand-light); border: 1px solid var(--border-sand);">
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <span style="font-size: 1.5rem;">🔐</span>
+        <div style="font-size: 0.88rem; color: var(--text-muted);">
+            <strong>Cryptographic Sharing Architecture:</strong> Sharing tokens do not contain plaintext encryption keys. Instead, NexaVault generates high-entropy, random, revocable tokens linked to recipient doctor identities. The backend enforces expiration timestamps and instant patient revocation on every download.
+        </div>
+    </div>
+</div>
+
+<!-- Doctor Only: Create Sharing Request Form -->
+{% if session.get('role') == 'doctor' %}
+<div class="card" style="margin-bottom: 2.5rem;">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Create Cross-Consultation Sharing Request</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Select patient, recipient specialist, and specific report IDs. Requires patient consent approval.
+            </p>
+        </div>
+        <span class="badge badge-info">Doctor Action</span>
+    </div>
+
+    <form method="POST" action="{{ url_for('create_sharing_request_route') }}">
+        <div class="grid-2">
+            <div class="form-group">
+                <label class="form-label">Patient</label>
+                <select name="patient_id" class="form-control" required>
+                    {% for p in patients %}
+                        <option value="{{ p.patient_id }}">{{ p.patient_id }} — {{ p.full_name }} ({{ p.department }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Recipient Doctor / Specialist</label>
+                <select name="recipient_doctor_id" class="form-control" required>
+                    {% for doc in doctors %}
+                        <option value="{{ doc.doctor_id }}">{{ doc.full_name }} — {{ doc.specialization }} ({{ doc.department }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label class="form-label">Specific Medical Record IDs (Comma Separated)</label>
+                <input type="text" name="record_ids" class="form-control" required placeholder="e.g. MR-1001, MR-1002" value="MR-1001">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Grant Validity Duration</label>
+                <select name="expiry_hours" class="form-control">
+                    <option value="24">24 Hours (Urgent Triage)</option>
+                    <option value="48" selected>48 Hours (Standard Consultation)</option>
+                    <option value="168">7 Days (Extended Specialist Review)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Clinical Referral Reason</label>
+            <textarea name="reason" class="form-control" rows="2" required placeholder="State clinical reason for secondary opinion, diagnostic review, or surgical consult..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-accent">
+            <span>📨</span> Submit Sharing Request for Patient Consent
+        </button>
+    </form>
+</div>
+{% endif %}
+
+<!-- Pending & Historical Requests -->
+<div class="card" style="margin-bottom: 2.5rem;">
+    <div class="card-header">
+        <h2 class="card-title">Sharing Requests & Patient Consent Decisions</h2>
+        <span class="badge badge-neutral">Consent Log</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Request ID</th>
+                    <th>Patient</th>
+                    <th>Requesting Doctor</th>
+                    <th>Recipient Doctor</th>
+                    <th>Permitted Records</th>
+                    <th>Status</th>
+                    <th>Decision Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td><code>{{ req.request_id }}</code></td>
+                    <td><strong>{{ req.patient.full_name }}</strong> ({{ req.patient_id }})</td>
+                    <td>{{ req.requesting_doctor.full_name }}</td>
+                    <td>{{ req.recipient_doctor.full_name }}</td>
+                    <td><code>{{ req.record_ids_json }}</code></td>
+                    <td>
+                        {% if req.status == 'Approved' %}
+                            <span class="badge badge-success">Approved</span>
+                        {% elif req.status == 'Rejected' %}
+                            <span class="badge badge-danger">Rejected</span>
+                        {% elif req.status == 'Revoked' %}
+                            <span class="badge badge-neutral">Revoked</span>
+                        {% else %}
+                            <span class="badge badge-warning">Pending Consent</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if session.get('role') == 'patient' and req.status == 'Pending_Consent' %}
+                            <div style="display: flex; gap: 0.4rem;">
+                                <form method="POST" action="{{ url_for('approve_sharing_request', req_id=req.request_id) }}" style="display: inline;">
+                                    <button class="btn btn-success btn-sm">Approve</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('reject_sharing_request', req_id=req.request_id) }}" style="display: inline;">
+                                    <button class="btn btn-danger btn-sm">Reject</button>
+                                </form>
+                            </div>
+                        {% else %}
+                            <span style="font-size: 0.8rem; color: var(--text-stone);">{{ req.status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" style="text-align: center; color: var(--text-stone);">No sharing requests recorded.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Active Sharing Grants & Revocation Management -->
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Active Sharing Grants & Cryptographic Tokens</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Authorized grants allow the recipient specialist to decrypt and view specified files until expiration or revocation.
+            </p>
+        </div>
+        <span class="badge badge-success">{{ grants|length }} Grants Tracked</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Token Fingerprint</th>
+                    <th>Patient</th>
+                    <th>Grantor Doctor</th>
+                    <th>Recipient Doctor</th>
+                    <th>Scope</th>
+                    <th>Expires</th>
+                    <th>Status</th>
+                    <th>Revoke</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in grants %}
+                <tr>
+                    <td><code>{{ g.grant_token[:12] }}...</code></td>
+                    <td><strong>{{ g.patient.full_name }}</strong></td>
+                    <td>{{ g.grantor.full_name }}</td>
+                    <td>{{ g.recipient.full_name }}</td>
+                    <td><code>{{ g.record_ids_json }}</code></td>
+                    <td style="font-size: 0.8rem;">{{ g.expires_at.strftime('%Y-%m-%d %H:%M UTC') }}</td>
+                    <td>
+                        {% if g.is_active() %}
+                            <span class="badge badge-success">Active</span>
+                        {% elif g.is_revoked %}
+                            <span class="badge badge-danger">Revoked</span>
+                        {% else %}
+                            <span class="badge badge-neutral">Expired</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if g.is_active() %}
+                            <form method="POST" action="{{ url_for('revoke_sharing_grant_route', grant_id=g.id) }}">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Revoke this grant immediately?')">
+                                    Revoke
+                                </button>
+                            </form>
+                        {% else %}
+                            <span style="font-size: 0.8rem; color: var(--text-stone);">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" style="text-align: center; color: var(--text-stone);">No active sharing grants found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Finance & Billing Console — NexaVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Finance & Billing Department Console</h1>
+        <p class="page-subtitle">Patient Invoices, Payment Status, and Separation of Clinical Duty</p>
+    </div>
+    <div>
+        <span class="badge badge-warning">Clinical Records Strictly Restricted</span>
+    </div>
+</div>
+
+<!-- Viva Demonstration: Access Control Test -->
+<div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, #FFF9F5, var(--bg-card)); border-left: 5px solid var(--color-accent-red);">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title" style="color: var(--color-accent-red);">⚡ Viva Defense Demonstration: Role-Based Denial Test</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                HIPAA & Zero-Trust principle: Financial personnel have legitimate billing authority, but must be completely blocked from clinical pathology or doctor notes.
+            </p>
+        </div>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div style="font-size: 0.9rem;">
+            Click below to simulate a Finance user attempting to download Harshita Makwana's encrypted medical report (<code>MR-1001</code>):
+        </div>
+        <a href="{{ url_for('download_medical_record', record_id='MR-1001') }}" class="btn btn-outline" style="border-color: var(--color-danger); color: var(--color-danger);" target="_blank">
+            <span>🚫</span> Attempt Medical Record Decryption (Expect 403 Denial)
+        </a>
+    </div>
+</div>
+
+<!-- Invoices & Billing Table -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Patient Invoices & Statements</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Encrypted billing vouchers and payment records.</p>
+        </div>
+        <span class="badge badge-success">Authorized Billing Scope</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Invoice ID</th>
+                    <th>Patient ID</th>
+                    <th>Patient Name</th>
+                    <th>Title / Purpose</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bills %}
+                <tr>
+                    <td><code>{{ b.invoice_id }}</code></td>
+                    <td><code>{{ b.patient_id }}</code></td>
+                    <td><strong>{{ b.patient.full_name if b.patient else 'Unknown' }}</strong></td>
+                    <td>{{ b.title }}</td>
+                    <td><strong>₹{{ "%.2f"|format(b.amount) }}</strong></td>
+                    <td>
+                        <span class="badge {% if b.status == 'Paid' %}badge-success{% else %}badge-warning{% endif %}">
+                            {{ b.status }}
+                        </span>
+                    </td>
+                    <td style="font-size: 0.8rem;">{{ b.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" style="text-align: center; color: var(--text-stone);">No billing records found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add New Invoice / Billing Statement -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Generate Billing Record</h2>
+    </div>
+
+    <form method="POST" action="{{ url_for('create_billing_record_route') }}">
+        <div class="grid-3">
+            <div class="form-group">
+                <label class="form-label">Patient</label>
+                <select name="patient_id" class="form-control" required>
+                    {% for p in patients %}
+                        <option value="{{ p.patient_id }}">{{ p.patient_id }} — {{ p.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Billing Purpose / Title</label>
+                <input type="text" name="title" class="form-control" required placeholder="e.g. In-Patient Admission & Care Fee">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Amount (INR ₹)</label>
+                <input type="number" step="0.01" name="amount" class="form-control" required placeholder="5000.00">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-accent">
+            <span>🧾</span> Record Authorized Billing Statement
+        </button>
+    </form>
+</div>
+{% endblock %}

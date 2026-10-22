@@ -1,0 +1,147 @@
+/* ==========================================================================
+   NexaVault Animation & Interaction Stylesheet
+   ========================================================================== */
+
+/* Fade-in & Slide-up reveals */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 0 rgba(232, 90, 79, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(232, 90, 79, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(232, 90, 79, 0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Encryption Process Pipeline Animation */
+.encryption-pipeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.pipeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+  text-align: center;
+  flex: 1;
+}
+
+.pipeline-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--border-sand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--text-stone);
+  transition: all 0.4s ease;
+  margin-bottom: 0.5rem;
+}
+
+.pipeline-step.active .pipeline-icon {
+  border-color: var(--color-accent-red);
+  color: white;
+  background: var(--color-accent-red);
+  animation: pulseGlow 1.8s infinite;
+}
+
+.pipeline-step.completed .pipeline-icon {
+  border-color: var(--color-success);
+  color: white;
+  background: var(--color-success);
+}
+
+.pipeline-line {
+  position: absolute;
+  top: 24px;
+  left: 10%;
+  width: 80%;
+  height: 3px;
+  background-color: var(--border-sand);
+  z-index: 1;
+}
+
+/* Animated Counters */
+.counter-value {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  transition: all 0.5s ease-out;
+}
+
+/* Card hover lifts */
+.card-hover-lift {
+  transition: transform 0.25s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.25s ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Skeleton Loading Shimmer */
+.skeleton {
+  background: linear-gradient(90deg, #EAE7DC 25%, #F4EFEB 50%, #EAE7DC 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* Page entrance animations */
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-delay-1 { animation-delay: 0.1s; }
+.animate-delay-2 { animation-delay: 0.2s; }
+.animate-delay-3 { animation-delay: 0.3s; }
+
+/* Reduced Motion Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In — NexaVault Secure Medical Portal{% endblock %}
+
+{% block content %}
+<div style="max-width: 520px; margin: 2rem auto;">
+    <div class="card animate-fade-in-up">
+        <div class="card-header" style="text-align: center; display: block; border-bottom: none; margin-bottom: 0.5rem;">
+            <div class="nav-logo-icon" style="margin: 0 auto 1rem auto; width: 48px; height: 48px; font-size: 1.4rem;">NV</div>
+            <h1 class="card-title" style="font-size: 1.5rem;">Sign In to NexaVault</h1>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.35rem;">
+                Protected by AES-256 Envelope Encryption and Zero-Knowledge Audit
+            </p>
+        </div>
+
+        <!-- Quick One-Click Credentials Filler for Viva Demo -->
+        <div style="background-color: var(--bg-sand-light); border: 1px solid var(--border-sand); border-radius: var(--radius-md); padding: 0.85rem; margin-bottom: 1.5rem;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-accent-red); text-transform: uppercase; margin-bottom: 0.5rem;">
+                ⚡ Viva Demo One-Click Fill:
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="selectDemoRole('admin@test.com', 'Admin@123')">Admin</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="selectDemoRole('doctor@test.com', 'Doctor@123')">Doctor (Dr. Aarav)</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="selectDemoRole('patient@test.com', 'Patient@123')">Patient (Harshita)</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="selectDemoRole('finance@test.com', 'Finance@123')">Finance</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="selectDemoRole('staff@test.com', 'Staff@123')">Staff</button>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-group">
+                <label for="login-email" class="form-label">Email Address</label>
+                <input type="email" name="email" id="login-email" class="form-control" required placeholder="e.g. doctor@test.com">
+            </div>
+
+            <div class="form-group">
+                <label for="login-password" class="form-label">Password</label>
+                <input type="password" name="password" id="login-password" class="form-control" required placeholder="Enter your credentials">
+            </div>
+
+            <button type="submit" class="btn btn-accent" style="width: 100%; padding: 0.75rem; margin-top: 0.5rem;">
+                Authenticate & Verify Session &rarr;
+            </button>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
+            Don't have an account? <a href="{{ url_for('register') }}" style="font-weight: 600;">Register as Patient</a>
+        </div>
+    </div>
+    
+    <div style="margin-top: 1rem; text-align: center; font-size: 0.8rem; color: var(--text-stone);">
+        🔒 HIPAA Safeguard § 164.312(a)(1) — 3 failed attempts will trigger a security investigation alert.
+    </div>
+</div>
+{% endblock %}

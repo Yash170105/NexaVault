@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Incident Response Console — NexaVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Security Incident Response Console</h1>
+        <p class="page-subtitle">HIPAA § 164.308(a)(6) Standard: Incident Triage, Remediation & Forensics</p>
+    </div>
+    <span class="badge badge-info">{{ incidents|length }} Incidents Tracked</span>
+</div>
+
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <h2 class="card-title">Active Security Incidents</h2>
+        <span class="badge badge-neutral">Triage Board</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Incident ID</th>
+                    <th>Title & Severity</th>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th>Investigator Notes</th>
+                    <th>Remediation Triage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inc in incidents %}
+                <tr>
+                    <td><code>{{ inc.incident_number }}</code></td>
+                    <td>
+                        <strong>{{ inc.title }}</strong>
+                        <div>
+                            <span class="badge {% if inc.severity in ['High', 'Critical'] %}badge-danger{% else %}badge-warning{% endif %}">
+                                {{ inc.severity }}
+                            </span>
+                        </div>
+                    </td>
+                    <td style="font-size: 0.8rem;">{{ inc.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</td>
+                    <td>
+                        <span class="badge {% if inc.status == 'Resolved' %}badge-success{% elif inc.status == 'Investigating' %}badge-warning{% elif inc.status == 'False_Positive' %}badge-neutral{% else %}badge-danger{% endif %}">
+                            {{ inc.status }}
+                        </span>
+                    </td>
+                    <td style="font-size: 0.85rem; max-width: 300px;">
+                        {{ inc.notes or 'Initial investigation pending.' }}
+                    </td>
+                    <td>
+                        <!-- Triage Form -->
+                        <form method="POST" action="{{ url_for('update_incident_route', incident_id=inc.id) }}" style="display: flex; flex-direction: column; gap: 0.35rem;">
+                            <select name="status" class="form-control" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                <option value="Open" {% if inc.status == 'Open' %}selected{% endif %}>Open</option>
+                                <option value="Investigating" {% if inc.status == 'Investigating' %}selected{% endif %}>Investigating</option>
+                                <option value="Resolved" {% if inc.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                                <option value="False_Positive" {% if inc.status == 'False_Positive' %}selected{% endif %}>False Positive</option>
+                            </select>
+                            <input type="text" name="notes" class="form-control" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" placeholder="Add triage notes...">
+                            <button type="submit" class="btn btn-primary btn-sm" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">
+                                Update Triage
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" style="text-align: center; color: var(--text-stone);">No open incidents recorded. All systems operational.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

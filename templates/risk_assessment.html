@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}HIPAA-Aligned Security Controls Matrix — NexaVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">HIPAA-Aligned Safeguards & Risk Assessment Matrix</h1>
+        <p class="page-subtitle">Mapping of 45 CFR Part 164 Subpart C Security Standards to NexaVault Architecture</p>
+    </div>
+    <span class="badge badge-success">8 Safeguards Implemented</span>
+</div>
+
+<!-- HIPAA Prototype Scope Disclaimer -->
+<div class="card" style="margin-bottom: 2rem; border-left: 5px solid var(--color-coral); background-color: #FFFDF9;">
+    <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+        <span style="font-size: 1.5rem;">⚖️</span>
+        <div style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6;">
+            <strong>Regulatory Scope & Compliance Note:</strong> NexaVault is engineered as a <strong>HIPAA-aligned prototype and cybersecurity demonstration platform</strong>. True regulatory HIPAA compliance requires organization-wide governance, legal Business Associate Agreements (BAAs), verified enterprise infrastructure, and third-party penetration testing. The technical safeguards below reflect intentional alignment with HHS rules.
+        </div>
+    </div>
+</div>
+
+<!-- Controls Matrix Table -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <h2 class="card-title">Technical, Administrative & Physical Controls Inventory</h2>
+        <span class="badge badge-neutral">45 CFR § 164.308 - 164.312</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Control ID</th>
+                    <th>Safeguard Area</th>
+                    <th>HIPAA Citation</th>
+                    <th>Safeguard Name</th>
+                    <th>Type</th>
+                    <th>Implementation in NexaVault</th>
+                    <th>Audit Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in controls %}
+                <tr>
+                    <td><code>{{ c.control_id }}</code></td>
+                    <td><strong>{{ c.category }}</strong></td>
+                    <td style="font-size: 0.8rem;"><code>{{ c.hipaa_citation }}</code></td>
+                    <td>{{ c.control_name }}</td>
+                    <td><span class="badge badge-neutral">{{ c.safeguard_type }}</span></td>
+                    <td style="font-size: 0.85rem; max-width: 320px;">{{ c.notes }}</td>
+                    <td><span class="badge badge-success">✓ {{ c.status }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Threat Detection & Risk Engine — NexaVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Threat Detection & Risk Scoring Engine</h1>
+        <p class="page-subtitle">Real-Time Anomaly Detection, Unauthorized Access Probing & File Tamper Alerts</p>
+    </div>
+    <span class="badge badge-info">Zero-Trust Threat Engine</span>
+</div>
+
+<!-- Dynamic Risk Score Gauge -->
+<div class="card" style="margin-bottom: 2rem; border-top: 5px solid {{ risk_data.color }};">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+        <div>
+            <div class="stat-label">System Perimeter Threat Level</div>
+            <div class="stat-value" style="color: {{ risk_data.color }}; font-size: 3rem;">
+                {{ risk_data.score }}<span style="font-size: 1.4rem; color: var(--text-stone);"> / 100</span>
+            </div>
+            <div style="font-weight: 700; color: {{ risk_data.color }}; font-size: 1.1rem;">
+                {{ risk_data.level }}
+            </div>
+        </div>
+
+        <div style="max-width: 500px; font-size: 0.88rem; color: var(--text-muted);">
+            <p><strong>Heuristic Detection Policy:</strong></p>
+            <ul style="margin-left: 1.25rem; margin-top: 0.25rem; line-height: 1.5;">
+                <li><strong>Critical (+40 pts):</strong> File integrity mismatch or audit log chain alteration.</li>
+                <li><strong>High (+25 pts):</strong> Unauthorized clinical record access, role probe, or unusual bulk downloads.</li>
+                <li><strong>Medium (+15 pts):</strong> Repeated failed logins (&ge;3 attempts) or unassigned sharing requests.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- All Security Alerts Table -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Security Alert Stream & Forensic Log</h2>
+        <span class="badge badge-neutral">{{ alerts|length }} Alerts Recorded</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Rule Triggered</th>
+                    <th>Severity</th>
+                    <th>Source IP</th>
+                    <th>User Account</th>
+                    <th>Forensic Evidence Details</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in alerts %}
+                <tr>
+                    <td style="font-size: 0.8rem;">{{ a.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}</td>
+                    <td><strong>{{ a.rule_name }}</strong></td>
+                    <td>
+                        <span class="badge {% if a.severity == 'Critical' %}badge-danger{% elif a.severity == 'High' %}badge-danger{% elif a.severity == 'Medium' %}badge-warning{% else %}badge-success{% endif %}">
+                            {{ a.severity }}
+                        </span>
+                    </td>
+                    <td><code>{{ a.source_ip }}</code></td>
+                    <td>{{ a.user_email or 'Anonymous' }}</td>
+                    <td style="font-size: 0.85rem;">{{ a.details }}</td>
+                    <td><span class="badge badge-neutral">{{ a.status }}</span></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" style="text-align: center; color: var(--text-stone);">Zero security alerts triggered. Perimeter secure.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

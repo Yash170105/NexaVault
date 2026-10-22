@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ doctor.full_name }} — Doctor Profile — NexaVault{% endblock %}
+
+{% block content %}
+<div class="card animate-fade-in-up" style="margin-bottom: 2rem;">
+    <div style="display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap;">
+        <div class="doctor-avatar-circle" style="width: 90px; height: 90px; font-size: 2.2rem; flex-shrink: 0;">
+            {{ doctor.avatar_initials }}
+        </div>
+        <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.2rem;">{{ doctor.full_name }}</h1>
+                    <div style="font-size: 1.1rem; color: var(--color-accent-red); font-weight: 600;">
+                        {{ doctor.specialization }} ({{ doctor.department }})
+                    </div>
+                </div>
+                <code>{{ doctor.doctor_id }}</code>
+            </div>
+
+            <div style="display: flex; gap: 1.5rem; margin: 1rem 0; font-size: 0.9rem; flex-wrap: wrap;">
+                <div>🎓 <strong>Qualifications:</strong> {{ doctor.qualification }}</div>
+                <div>⏳ <strong>Clinical Experience:</strong> {{ doctor.experience_years }} Years</div>
+                <div>✉️ <strong>Contact:</strong> {{ doctor.contact_email }}</div>
+                <div>📞 <strong>Phone:</strong> {{ doctor.phone }}</div>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
+                {{ doctor.bio }}
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Primary Assigned Patients for this Doctor -->
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Assigned Patients (Primary Scope)</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Patients assigned to {{ doctor.full_name }} per hospital assignment directory.
+            </p>
+        </div>
+        <span class="badge badge-info">{{ assigned_patients|length }} Assigned</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Patient ID</th>
+                    <th>Full Name</th>
+                    <th>Age / Gender</th>
+                    <th>Blood Group</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in assigned_patients %}
+                <tr>
+                    <td><code>{{ p.patient_id }}</code></td>
+                    <td><strong>{{ p.full_name }}</strong></td>
+                    <td>{{ p.age }} yrs ({{ p.gender }})</td>
+                    <td><span class="badge badge-neutral">{{ p.blood_group }}</span></td>
+                    <td>{{ p.phone }}</td>
+                    <td><span class="badge badge-success">{{ p.status }}</span></td>
+                    <td>
+                        <a href="{{ url_for('patient_files_view', patient_id=p.patient_id) }}" class="btn btn-outline btn-sm">
+                            Clinical Records &rarr;
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" style="text-align: center; color: var(--text-stone);">No patients currently assigned.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

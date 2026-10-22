@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Desk Staff Directory — NexaVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Hospital Desk Staff Directory</h1>
+        <p class="page-subtitle">Demographic Triage & Reception Access (Read-Only Least Privilege)</p>
+    </div>
+    <div>
+        <span class="badge badge-neutral">Clinical Records & Financials Excluded</span>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 2rem; background-color: var(--bg-sand-light); border: 1px solid var(--border-sand);">
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <span style="font-size: 1.5rem;">ℹ️</span>
+        <div style="font-size: 0.88rem; color: var(--text-muted);">
+            <strong>Role Scoping Notice:</strong> Desk staff can view patient admission status and assigned departments to direct visitors, but do not hold cryptographic permissions to inspect medical charts, decrypt radiology files, or modify records.
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Patient Admissions & Basic Demographics (15 Patients)</h2>
+        <span class="badge badge-info">Harshita Makwana (P001) Primary #1</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Patient ID</th>
+                    <th>Full Name</th>
+                    <th>Demographics</th>
+                    <th>Blood Group</th>
+                    <th>Department</th>
+                    <th>Primary Doctor</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in patients %}
+                <tr>
+                    <td><code>{{ p.patient_id }}</code></td>
+                    <td><strong>{{ p.full_name }}</strong></td>
+                    <td>{{ p.age }} yrs ({{ p.gender }})</td>
+                    <td><span class="badge badge-neutral">{{ p.blood_group }}</span></td>
+                    <td>{{ p.department }}</td>
+                    <td>{{ p.primary_doctor.full_name if p.primary_doctor else 'Unassigned' }}</td>
+                    <td><span class="badge badge-success">{{ p.status }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}NexaVault — Secure Medical Records & Threat Monitoring Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero animate-fade-in-up">
+    <div class="hero-pill">
+        <span>🛡️</span> HIPAA-Aligned Cryptographic Healthcare Vault
+    </div>
+    <h1 class="hero-title">
+        Secure Medical Records.<br><span>Controlled Access.</span> Trusted Care.
+    </h1>
+    <p class="hero-desc">
+        NexaVault is a cybersecurity-focused healthcare platform engineered to protect sensitive electronic health records with AES-256-GCM envelope encryption, patient-governed consent sharing, and real-time forensic threat detection.
+    </p>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        {% if session.get('user_id') %}
+            <a href="{{ url_for('dashboard_router') }}" class="btn btn-accent btn-lg">Open My Dashboard &rarr;</a>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-accent btn-lg">Launch Secure Portal</a>
+            <a href="{{ url_for('list_doctors') }}" class="btn btn-outline btn-lg">View Doctor Directory</a>
+        {% endif %}
+        <a href="{{ url_for('risk_assessment_view') }}" class="btn btn-outline btn-lg">Inspect HIPAA Safeguards</a>
+    </div>
+</section>
+
+<!-- Core Animated Stats -->
+<div class="grid-4" style="margin-bottom: 3rem;">
+    <div class="stat-card animate-fade-in-up animate-delay-1">
+        <div class="stat-label">Active Synthetic Cohort</div>
+        <div class="stat-value"><span class="counter-value" data-target="15">15</span></div>
+        <div class="stat-meta">Verified patient records (Harshita Makwana #1)</div>
+        <div class="stat-icon-bg">👥</div>
+    </div>
+    
+    <div class="stat-card animate-fade-in-up animate-delay-2">
+        <div class="stat-label">Specialist Directory</div>
+        <div class="stat-value"><span class="counter-value" data-target="10">10</span></div>
+        <div class="stat-meta">Credentialed clinical doctors</div>
+        <div class="stat-icon-bg">🩺</div>
+    </div>
+
+    <div class="stat-card animate-fade-in-up animate-delay-3">
+        <div class="stat-label">Cryptographic Cipher</div>
+        <div class="stat-value" style="font-size: 1.8rem; color: var(--color-coral);">AES-256-GCM</div>
+        <div class="stat-meta">Envelope encryption with ephemeral DEKs</div>
+        <div class="stat-icon-bg">🔒</div>
+    </div>
+
+    <div class="stat-card animate-fade-in-up">
+        <div class="stat-label">Forensic Audit Trail</div>
+        <div class="stat-value" style="font-size: 1.8rem; color: #2E7D32;">SHA-256</div>
+        <div class="stat-meta">Tamper-evident blockchain-style hash chain</div>
+        <div class="stat-icon-bg">📜</div>
+    </div>
+</div>
+
+<!-- Core Problems NexaVault Solves -->
+<div class="card" style="margin-bottom: 3rem;">
+    <div class="card-header">
+        <h2 class="card-title">Cybersecurity Problems NexaVault Solves</h2>
+        <span class="badge badge-info">Zero-Trust Architecture</span>
+    </div>
+    <div class="grid-3" style="gap: 1.5rem; margin-top: 1rem;">
+        <div style="background-color: var(--bg-sand-light); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-sand);">
+            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🔐</div>
+            <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-accent-red);">Encrypted Storage at Rest</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">
+                Medical reports are encrypted with unique per-file 256-bit keys before touching disk. Plaintext reports never persist unencrypted.
+            </p>
+        </div>
+
+        <div style="background-color: var(--bg-sand-light); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-sand);">
+            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">👨‍⚕️</div>
+            <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-accent-red);">Strict Doctor-Patient Scoping</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">
+                Doctors can ONLY view records of assigned patients or patients who explicitly consented to a time-limited sharing grant.
+            </p>
+        </div>
+
+        <div style="background-color: var(--bg-sand-light); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-sand);">
+            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">✋</div>
+            <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-accent-red);">Patient Consent Sovereignty</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">
+                Patients have complete visibility into their documents, approve or decline sharing requests, and can revoke grants at any moment.
+            </p>
+        </div>
+
+        <div style="background-color: var(--bg-sand-light); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-sand);">
+            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🚫</div>
+            <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-accent-red);">Clinical Separation of Duty</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">
+                Finance and desk staff are restricted from clinical data. Attempted access to clinical endpoints is blocked with HTTP 403 and logged.
+            </p>
+        </div>
+
+        <div style="background-color: var(--bg-sand-light); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-sand);">
+            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🛡️</div>
+            <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-accent-red);">Cryptographic Integrity Check</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">
+                AES-GCM authentication tags and SHA-256 baselines verify files prior to streaming. Any bit-flip tampering raises immediate Critical alarms.
+            </p>
+        </div>
+
+        <div style="background-color: var(--bg-sand-light); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-sand);">
+            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📊</div>
+            <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-accent-red);">Tamper-Evident Forensics</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">
+                Every access, upload, grant, and authentication attempt is chained with SHA-256 hashes. Audit logs cannot be secretly altered or deleted.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- 5-Step Encryption Pipeline Visualization -->
+<div class="card" style="margin-bottom: 3rem;">
+    <div class="card-header">
+        <h2 class="card-title">Cryptographic Medical File Lifecycle</h2>
+        <span class="badge badge-success">AES-256-GCM Envelope Encryption</span>
+    </div>
+    
+    <div class="encryption-pipeline">
+        <div class="pipeline-line"></div>
+        
+        <div class="pipeline-step completed">
+            <div class="pipeline-icon">1</div>
+            <strong style="font-size: 0.9rem;">Upload & Validate</strong>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Role & assignment check</span>
+        </div>
+        
+        <div class="pipeline-step completed">
+            <div class="pipeline-icon">2</div>
+            <strong style="font-size: 0.9rem;">Generate DEK</strong>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Random 256-bit key</span>
+        </div>
+        
+        <div class="pipeline-step completed">
+            <div class="pipeline-icon">3</div>
+            <strong style="font-size: 0.9rem;">AES-GCM Encrypt</strong>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Ciphertext + Auth tag</span>
+        </div>
+        
+        <div class="pipeline-step completed">
+            <div class="pipeline-icon">4</div>
+            <strong style="font-size: 0.9rem;">Master Key Wrap</strong>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">KEK wraps DEK</span>
+        </div>
+        
+        <div class="pipeline-step completed">
+            <div class="pipeline-icon">5</div>
+            <strong style="font-size: 0.9rem;">SHA-256 Baseline</strong>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Integrity record saved</span>
+        </div>
+    </div>
+</div>
+
+<!-- Technology Stack Specification -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">NexaVault Implementation Architecture</h2>
+        <span class="badge badge-neutral">Security Engineering Stack</span>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Technology</th>
+                    <th>Implementation Detail</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Frontend</strong></td>
+                    <td>HTML5, CSS3, JavaScript</td>
+                    <td>Warm Sand/Coral theme (#EAE7DC, #D8C3A5, #8E8D8A, #E98074, #E85A4F)</td>
+                </tr>
+                <tr>
+                    <td><strong>Backend</strong></td>
+                    <td>Python Flask</td>
+                    <td>Modular services (Encryption, Access Control, Audit, Threat Detection, Backup)</td>
+                </tr>
+                <tr>
+                    <td><strong>Database</strong></td>
+                    <td>SQLite 3 (Relational)</td>
+                    <td>Foreign-key linked patients, doctors, assignments, grants, and hash chain</td>
+                </tr>
+                <tr>
+                    <td><strong>File Encryption</strong></td>
+                    <td>AES-256-GCM Envelope Encryption</td>
+                    <td>Ephemeral Data Encryption Key wrapped by Application Master KEK</td>
+                </tr>
+                <tr>
+                    <td><strong>Integrity Verification</strong></td>
+                    <td>SHA-256 & GCM Auth Tags</td>
+                    <td>Zero-tampering verification prior to streaming or serving any file</td>
+                </tr>
+                <tr>
+                    <td><strong>Password Storage</strong></td>
+                    <td>scrypt / Argon2</td>
+                    <td>Salted password hashing via Werkzeug security primitives</td>
+                </tr>
+                <tr>
+                    <td><strong>Access Governance</strong></td>
+                    <td>Backend Role-Based Access Control</td>
+                    <td>Strict least privilege: Admin denied clinical decryption, Finance denied medical records</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

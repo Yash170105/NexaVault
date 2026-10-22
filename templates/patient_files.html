@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Medical Vault — {{ patient.full_name }} ({{ patient.patient_id }}) — NexaVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <h1 class="page-title">{{ patient.full_name }} — Clinical Vault</h1>
+            <code>{{ patient.patient_id }}</code>
+            {% if patient.patient_id == 'P001' %}
+                <span class="badge badge-accent" style="background-color: var(--color-accent-red); color: white;">PRIMARY SAMPLE</span>
+            {% endif %}
+        </div>
+        <p class="page-subtitle">
+            Primary Doctor: <strong>{{ patient.primary_doctor.full_name if patient.primary_doctor else 'Unassigned' }}</strong> · Blood: {{ patient.blood_group }} · Department: {{ patient.department }}
+        </p>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        {% if session.get('role') == 'doctor' %}
+            <a href="{{ url_for('sharing_hub') }}" class="btn btn-outline">
+                <span>🤝</span> Request Cross-Consultation Sharing
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Medical Files Table -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Encrypted Clinical Records</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Files are stored as encrypted blobs in <code>encrypted_files/med_records/</code> and decrypted in-memory upon valid authentication.
+            </p>
+        </div>
+        <span class="badge badge-success">AES-256-GCM Vault</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Record ID</th>
+                    <th>Document Title</th>
+                    <th>Category</th>
+                    <th>Filename</th>
+                    <th>Size</th>
+                    <th>SHA-256 Fingerprint</th>
+                    <th>Uploaded At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in records %}
+                <tr>
+                    <td><code>{{ rec.record_id }}</code></td>
+                    <td><strong>{{ rec.title }}</strong></td>
+                    <td><span class="badge badge-neutral">{{ rec.category }}</span></td>
+                    <td style="font-size: 0.85rem;">{{ rec.original_filename }}</td>
+                    <td style="font-size: 0.85rem;">{{ (rec.file_size / 1024)|round(1) }} KB</td>
+                    <td>
+                        <span style="font-family: var(--font-mono); font-size: 0.75rem; background: var(--bg-sand-light); padding: 0.2rem 0.4rem; border-radius: 4px;" title="{{ rec.sha256_hash }}">
+                            {{ rec.sha256_hash[:10] }}...{{ rec.sha256_hash[-8:] }}
+                        </span>
+                    </td>
+                    <td style="font-size: 0.8rem;">{{ rec.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.4rem;">
+                            <a href="{{ url_for('download_medical_record', record_id=rec.record_id) }}" class="btn btn-accent btn-sm">
+                                Decrypt & Download
+                            </a>
+                            <a href="{{ url_for('verify_record_integrity_route', record_id=rec.record_id) }}" class="btn btn-outline btn-sm">
+                                Verify Hash
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" style="text-align: center; color: var(--text-stone);">No medical files found for this patient.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

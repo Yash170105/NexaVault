@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient Vault — {{ patient.full_name }} ({{ patient.patient_id }}) — NexaVault{% endblock %}
+
+{% block content %}
+<!-- Patient Profile Header -->
+<div class="page-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <div class="doctor-avatar-circle" style="background: linear-gradient(135deg, #7b1fa2, #ab47bc); width: 64px; height: 64px; font-size: 1.5rem;">
+            HM
+        </div>
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <h1 class="page-title">{{ patient.full_name }}</h1>
+                <span class="badge badge-info"><code>{{ patient.patient_id }}</code></span>
+                <span class="badge badge-success">Primary Sample Patient</span>
+            </div>
+            <p class="page-subtitle">
+                {{ patient.age }} yrs · Blood: <strong>{{ patient.blood_group }}</strong> · {{ patient.phone }} · Department: {{ patient.department }}
+            </p>
+        </div>
+    </div>
+    <div>
+        <div style="text-align: right; font-size: 0.85rem; color: var(--text-muted);">
+            <div>Primary Doctor: <strong>{{ patient.primary_doctor.full_name if patient.primary_doctor else 'Unassigned' }}</strong></div>
+            <div style="color: var(--text-stone);">{{ patient.primary_doctor.specialization if patient.primary_doctor else '' }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Consent Requests (HIPAA Patient Control) -->
+{% if pending_requests %}
+<div class="card" style="margin-bottom: 2rem; border-left: 5px solid var(--color-warning); background-color: #FFFDF9;">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title" style="color: var(--color-warning);">⚠️ Doctor Sharing Requests Requiring Your Consent</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Under HIPAA safeguards, clinical records cannot be shared with external specialists without your explicit cryptographic authorization.
+            </p>
+        </div>
+        <span class="badge badge-warning">Action Required</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Requesting Doctor</th>
+                    <th>Recipient Doctor</th>
+                    <th>Requested Documents</th>
+                    <th>Clinical Reason</th>
+                    <th>Decision</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in pending_requests %}
+                <tr>
+                    <td><strong>{{ req.requesting_doctor.full_name }}</strong></td>
+                    <td><strong>{{ req.recipient_doctor.full_name }}</strong> ({{ req.recipient_doctor.specialization }})</td>
+                    <td><code>{{ req.record_ids_json }}</code></td>
+                    <td style="font-size: 0.85rem;">{{ req.reason }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <form method="POST" action="{{ url_for('approve_sharing_request', req_id=req.request_id) }}" style="display: inline;">
+                                <input type="hidden" name="expiry_hours" value="48">
+                                <button type="submit" class="btn btn-success btn-sm">Approve (48h)</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('reject_sharing_request', req_id=req.request_id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Encrypted Medical Documents Vault -->
+<div class="card" style="margin-bottom: 2.5rem;">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">My Encrypted Health Vault Documents</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Each file is sealed with an ephemeral AES-256-GCM key and validated against a trusted SHA-256 baseline before delivery.
+            </p>
+        </div>
+        <span class="badge badge-success">Zero-Knowledge Storage</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Record ID</th>
+                    <th>Document Title</th>
+                    <th>Category</th>
+                    <th>Uploaded Date</th>
+                    <th>Integrity Hash (SHA-256)</th>
+                    <th>Cryptographic Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in records %}
+                <tr>
+                    <td><code>{{ rec.record_id }}</code></td>
+                    <td><strong>{{ rec.title }}</strong></td>
+                    <td><span class="badge badge-neutral">{{ rec.category }}</span></td>
+                    <td style="font-size: 0.85rem;">{{ rec.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</td>
+                    <td>
+                        <span style="font-family: var(--font-mono); font-size: 0.75rem; background: var(--bg-sand-light); padding: 0.2rem 0.4rem; border-radius: 4px;" title="{{ rec.sha256_hash }}">
+                            {{ rec.sha256_hash[:12] }}...{{ rec.sha256_hash[-8:] }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.4rem;">
+                            <a href="{{ url_for('download_medical_record', record_id=rec.record_id) }}" class="btn btn-accent btn-sm">
+                                Decrypt & Download
+                            </a>
+                            <a href="{{ url_for('verify_record_integrity_route', record_id=rec.record_id) }}" class="btn btn-outline btn-sm">
+                                Verify Hash
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" style="text-align: center; color: var(--text-stone);">No medical documents in vault yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom: 2.5rem;">
+    <!-- Active Sharing Grants & Revocation -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Active Sharing Authorizations</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">You can instantly revoke doctor access at any time.</p>
+            </div>
+            <span class="badge badge-info">{{ active_grants|length }} Active</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Recipient Doctor</th>
+                        <th>Documents</th>
+                        <th>Expires At</th>
+                        <th>Revocation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for g in active_grants %}
+                    <tr>
+                        <td><strong>{{ g.recipient.full_name }}</strong></td>
+                        <td><code>{{ g.record_ids_json }}</code></td>
+                        <td style="font-size: 0.8rem;">{{ g.expires_at.strftime('%Y-%m-%d %H:%M UTC') }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('revoke_sharing_grant_route', grant_id=g.id) }}">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Revoke this doctor\'s access token immediately?')">
+                                    Revoke
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-stone);">No active doctor sharing grants.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- My Invoices & Billing Summary -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Billing & Invoices</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Protected financial statements.</p>
+            </div>
+            <span class="badge badge-neutral">Finance Separated</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Invoice ID</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in billing_records %}
+                    <tr>
+                        <td><code>{{ b.invoice_id }}</code></td>
+                        <td>{{ b.title }}</td>
+                        <td><strong>₹{{ "%.2f"|format(b.amount) }}</strong></td>
+                        <td>
+                            <span class="badge {% if b.status == 'Paid' %}badge-success{% else %}badge-warning{% endif %}">
+                                {{ b.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-stone);">No billing records found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Transparent Access History (Patient Audit Visibility) -->
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Patient Audit Visibility: Access & Decryption History</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                HIPAA § 164.312(b) mandate: Transparent forensic trail of every entity that queried or decrypted your health records.
+            </p>
+        </div>
+        <span class="badge badge-success">Cryptographically Logged</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Actor / Email</th>
+                    <th>Action</th>
+                    <th>Resource</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in my_audit_history %}
+                <tr>
+                    <td style="font-size: 0.8rem;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}</td>
+                    <td><strong>{{ log.user_email }}</strong> ({{ log.role }})</td>
+                    <td>{{ log.action }}</td>
+                    <td><code>{{ log.target_resource }}</code></td>
+                    <td>
+                        <span class="badge {% if log.status == 'SUCCESS' %}badge-success{% else %}badge-danger{% endif %}">
+                            {{ log.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" style="text-align: center; color: var(--text-stone);">No access transactions recorded for your records yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
